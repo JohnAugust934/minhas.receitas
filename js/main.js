@@ -608,7 +608,7 @@ function renderRecipeDetail(recipe) {
     recipe.name
   }" class="w-full h-64 md:h-80 object-cover"><button id="back-from-detail" class="absolute top-4 left-4 bg-white/80 backdrop-blur-sm rounded-full p-2 text-gray-800 hover:bg-white"><i data-lucide="arrow-left" class="h-6 w-6"></i></button></div><div class="p-6 md:p-8"><div class="flex justify-between items-start mb-4"><h1 class="text-3xl md:text-4xl font-bold text-gray-900">${
     recipe.name
-  }</h1><div class="flex-shrink-0 ml-4"><button id="favorite-btn-detail" class="p-2 rounded-full text-red-500 hover:bg-red-100">${
+  }</h1><div class="flex-shrink-0 ml-4 flex space-x-2"><button id="print-btn-detail" class="p-2 rounded-full text-gray-600 hover:bg-gray-100"><i data-lucide="printer" class="h-7 w-7"></i></button><button id="favorite-btn-detail" class="p-2 rounded-full text-red-500 hover:bg-red-100">${
     recipe.isFavorite
       ? '<i data-lucide="heart" class="h-7 w-7 fill-current"></i>'
       : '<i data-lucide="heart" class="h-7 w-7"></i>'
@@ -654,6 +654,9 @@ function renderRecipeDetail(recipe) {
     .addEventListener("click", () =>
       toggleFavoriteStatus(recipe.id, recipe.isFavorite)
     );
+  document
+    .getElementById("print-btn-detail")
+    .addEventListener("click", () => window.print());
 }
 function createEditableListItem(container, placeholder, value = "") {
   const wrapper = document.createElement("div");

@@ -1,101 +1,96 @@
 /* Custom Styles */
 body {
-  font-family: "Inter", sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  background-color: #fff8f0; /* Um tom de creme claro para o fundo */
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: #FFF8F0; /* Um tom de creme claro para o fundo */
 }
 
 .logo-font {
-  font-family: "Pacifico", cursive;
+    font-family: 'Pacifico', cursive;
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */
 .no-scrollbar::-webkit-scrollbar {
-  display: none;
+    display: none;
 }
 
 /* Hide scrollbar for IE, Edge and Firefox */
 .no-scrollbar {
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
 }
 
 /* Custom animation for modal */
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
 }
 .modal-fade-in {
-  animation: fadeIn 0.2s ease-out forwards;
+    animation: fadeIn 0.2s ease-out forwards;
 }
 
 /* New: Dropdown menu transition */
 .user-menu-transition {
-  transition: all 0.2s ease-out;
+    transition: all 0.2s ease-out;
 }
 .user-menu.hidden {
-  opacity: 0;
-  transform: translateY(-10px);
-  pointer-events: none;
+    opacity: 0;
+    transform: translateY(-10px);
+    pointer-events: none;
 }
 .user-menu:not(.hidden) {
-  opacity: 1;
-  transform: translateY(0);
+    opacity: 1;
+    transform: translateY(0);
 }
+
 
 /* Add focus ring styles for accessibility, matching the new theme color */
 *:focus-visible {
-  outline: 2px solid #d97706; /* amber-600 */
-  outline-offset: 2px;
-  border-radius: 6px;
+    outline: 2px solid #D97706; /* amber-600 */
+    outline-offset: 2px;
+    border-radius: 6px;
 }
 
 /* Hide number input spinners for a cleaner look */
-input[type="number"]::-webkit-inner-spin-button,
-input[type="number"]::-webkit-outer-spin-button {
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
-input[type="number"] {
+input[type=number] {
   -moz-appearance: textfield;
 }
 
 /* New Toggle Switch Styles */
 .toggle-switch {
-  position: relative;
-  display: inline-block;
-  width: 3.5rem; /* 56px */
-  height: 2rem; /* 32px */
-  background-color: #e5e7eb; /* gray-200 */
-  border-radius: 9999px;
-  transition: background-color 0.2s ease-in-out;
+    position: relative;
+    display: inline-block;
+    width: 3.5rem; /* 56px */
+    height: 2rem; /* 32px */
+    background-color: #e5e7eb; /* gray-200 */
+    border-radius: 9999px;
+    transition: background-color 0.2s ease-in-out;
 }
 
 .toggle-switch[aria-checked="true"] {
-  background-color: #f59e0b; /* amber-500 */
+    background-color: #f59e0b; /* amber-500 */
 }
 
 .toggle-switch-circle {
-  position: absolute;
-  top: 0.25rem; /* 4px */
-  left: 0.25rem; /* 4px */
-  width: 1.5rem; /* 24px */
-  height: 1.5rem; /* 24px */
-  background-color: white;
-  border-radius: 9999px;
-  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-  transition: transform 0.2s ease-in-out;
+    position: absolute;
+    top: 0.25rem; /* 4px */
+    left: 0.25rem; /* 4px */
+    width: 1.5rem; /* 24px */
+    height: 1.5rem; /* 24px */
+    background-color: white;
+    border-radius: 9999px;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    transition: transform 0.2s ease-in-out;
 }
 
 .toggle-switch[aria-checked="true"] .toggle-switch-circle {
-  transform: translateX(1.5rem); /* 24px */
+    transform: translateX(1.5rem); /* 24px */
 }
 
 /* NEW: Animation for recipe cards */
@@ -118,14 +113,79 @@ input[type="number"] {
 
 /* NEW: Styles for Drag-and-Drop functionality */
 .drag-handle {
-  cursor: grab;
+    cursor: grab;
 }
 
 .sortable-ghost {
-  opacity: 0.4;
-  background: #fef3c7; /* amber-100 */
+    opacity: 0.4;
+    background: #fef3c7; /* amber-100 */
 }
 
 .sortable-chosen {
-  cursor: grabbing;
+    cursor: grabbing;
+}
+
+/* NEW: Print-specific styles (CORRECTED) */
+@media print {
+    /* Hide all app elements that are not the recipe detail view */
+    body > #app-container > *:not(#recipe-detail-view) {
+        display: none;
+    }
+    
+    nav, #add-recipe-fab {
+        display: none;
+    }
+
+    /* Ensure the detail view and its content are visible and properly formatted */
+    #recipe-detail-view, #detail-content {
+        display: block !important;
+        position: static;
+        overflow: visible;
+        width: 100%;
+        height: auto;
+    }
+
+    .bg-white.rounded-lg.shadow-xl {
+        box-shadow: none !important;
+        border: 1px solid #ddd;
+    }
+    
+    img {
+        max-width: 100% !important;
+        break-inside: avoid;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        break-after: avoid;
+    }
+
+    ul, ol {
+        break-inside: avoid;
+    }
+
+    /* Hide UI elements within the recipe detail view that shouldn't be printed */
+    #back-from-detail, 
+    #favorite-btn-detail, 
+    #edit-recipe-btn-detail, 
+    #delete-recipe-btn-detail,
+    #print-btn-detail,
+    .flex-shrink-0,
+    button {
+        display: none !important;
+    }
+
+    /* Improve typography for printing */
+    body {
+        background-color: white !important;
+        color: black !important;
+    }
+
+    h1, h2, h3, strong {
+        color: black !important;
+    }
+
+    a {
+        text-decoration: none !important;
+        color: black !important;
+    }
 }
