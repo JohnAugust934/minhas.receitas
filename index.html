@@ -8,15 +8,14 @@
 
     <!-- PWA Manifest -->
     <link rel="manifest" href="manifest.json">
-
-    <!-- Ícones e Favicon (opcional, mas bom ter) -->
     <link rel="icon" href="assets/icons/icon-192x192.png" type="image/png">
     <link rel="apple-touch-icon" href="assets/icons/icon-192x192.png">
 
-    <!-- Google Fonts: Inter -->
+    <!-- Google Fonts: Inter & a Script Font for Logo -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Pacifico&display=swap"
+        rel="stylesheet">
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -31,15 +30,14 @@
 
 <body class="bg-gray-50 text-gray-800">
 
-    <!-- O corpo do HTML permanece o mesmo de antes -->
     <!-- Main Container -->
     <div id="app-container" class="min-h-screen">
 
         <!-- ===== Login/Signup View ===== -->
-        <div id="auth-view" class="flex items-center justify-center min-h-screen bg-gray-100">
+        <div id="auth-view" class="flex items-center justify-center min-h-screen bg-gray-100 p-4">
             <div class="w-full max-w-md p-8 space-y-6 bg-white rounded-xl shadow-lg">
                 <div class="text-center">
-                    <h1 class="text-3xl font-bold text-gray-900">Minhas Receitas</h1>
+                    <h1 class="logo-font text-4xl text-amber-600">Minhas Receitas</h1>
                     <p class="mt-2 text-gray-600">Seu livro de receitas digital.</p>
                 </div>
 
@@ -50,20 +48,26 @@
                         <div>
                             <label for="login-email" class="text-sm font-medium text-gray-700">Email</label>
                             <input id="login-email" type="email" required
-                                class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-amber-500 focus:border-amber-500 sm:text-sm"
                                 placeholder="seu@email.com">
                         </div>
                         <div>
-                            <label for="login-password" class="text-sm font-medium text-gray-700">Senha</label>
+                            <div class="flex items-center justify-between">
+                                <label for="login-password" class="text-sm font-medium text-gray-700">Senha</label>
+                                <div class="text-sm">
+                                    <a href="#" id="forgot-password-link"
+                                        class="font-medium text-amber-600 hover:text-amber-500">Esqueceu a senha?</a>
+                                </div>
+                            </div>
                             <input id="login-password" type="password" required
-                                class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-amber-500 focus:border-amber-500 sm:text-sm"
                                 placeholder="••••••••">
                         </div>
                         <button type="submit"
-                            class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Entrar</button>
+                            class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500">Entrar</button>
                         <p class="text-center text-sm text-gray-600">
                             Não tem uma conta? <a href="#" id="show-signup"
-                                class="font-medium text-indigo-600 hover:text-indigo-500">Cadastre-se</a>
+                                class="font-medium text-amber-600 hover:text-amber-500">Cadastre-se</a>
                         </p>
                     </form>
 
@@ -72,21 +76,21 @@
                         <div>
                             <label for="signup-email" class="text-sm font-medium text-gray-700">Email</label>
                             <input id="signup-email" type="email" required
-                                class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-amber-500 focus:border-amber-500 sm:text-sm"
                                 placeholder="seu@email.com">
                         </div>
                         <div>
                             <label for="signup-password" class="text-sm font-medium text-gray-700">Senha</label>
-                            <input id="signup-password" type="password" required
-                                class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                placeholder="Crie uma senha forte">
+                            <input id="signup-password" type="password" required minlength="6"
+                                class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-amber-500 focus:border-amber-500 sm:text-sm"
+                                placeholder="Crie uma senha forte (mínimo 6 caracteres)">
                         </div>
                         <button type="submit"
-                            class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Criar
+                            class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500">Criar
                             Conta</button>
                         <p class="text-center text-sm text-gray-600">
                             Já tem uma conta? <a href="#" id="show-login"
-                                class="font-medium text-indigo-600 hover:text-indigo-500">Entrar</a>
+                                class="font-medium text-amber-600 hover:text-amber-500">Entrar</a>
                         </p>
                     </form>
                 </div>
@@ -95,17 +99,59 @@
 
         <!-- ===== Main App View (Recipe List) ===== -->
         <div id="app-view" class="hidden">
-            <header class="bg-white shadow-sm sticky top-0 z-20">
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-                    <h1 class="text-2xl font-bold text-gray-900">Minhas Receitas</h1>
-                    <div>
-                        <span id="user-email-display" class="text-sm text-gray-500 mr-4"></span>
-                        <button id="logout-btn"
-                            class="text-sm font-medium text-indigo-600 hover:text-indigo-500">Sair</button>
+            <!-- New Navigation Bar -->
+            <nav class="bg-white shadow-md sticky top-0 z-20">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="flex items-center justify-between h-16">
+                        <div class="flex-shrink-0">
+                            <h1 class="logo-font text-3xl text-amber-600">Minhas Receitas</h1>
+                        </div>
+                        <div class="relative">
+                            <button id="user-menu-button"
+                                class="flex items-center justify-center h-10 w-10 rounded-full bg-amber-100 text-amber-700 hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500">
+                                <i data-lucide="user" class="h-6 w-6"></i>
+                            </button>
+                            <!-- Dropdown Menu -->
+                            <div id="user-menu"
+                                class="hidden absolute right-0 mt-2 w-56 origin-top-right bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none py-1 user-menu-transition">
+                                <div class="px-4 py-2 border-b">
+                                    <p class="text-sm text-gray-500">Logado como</p>
+                                    <p id="user-email-display" class="text-sm font-medium text-gray-900 truncate"></p>
+                                </div>
+                                <a href="#" id="change-password-btn"
+                                    class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i data-lucide="key-round" class="mr-3 h-5 w-5 text-gray-500"></i>
+                                    Alterar Senha
+                                </a>
+                                <a href="#" id="logout-btn"
+                                    class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i data-lucide="log-out" class="mr-3 h-5 w-5 text-gray-500"></i>
+                                    Sair
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </header>
+            </nav>
+
             <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <!-- NEW Elegant Search Section -->
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold tracking-tight text-gray-800 sm:text-4xl">Explore as Suas Receitas
+                    </h2>
+                    <p class="mt-3 text-lg leading-6 text-gray-600">Encontre rapidamente o que deseja cozinhar hoje.</p>
+                    <div class="mt-6 max-w-xl mx-auto">
+                        <div class="relative">
+                            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                                <i data-lucide="search" class="h-5 w-5 text-gray-500"></i>
+                            </div>
+                            <input type="text" id="search-input"
+                                class="block w-full rounded-full border-gray-300 bg-white py-3 pl-12 pr-4 shadow-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 sm:text-sm"
+                                placeholder="Buscar por bolo de chocolate, frango...">
+                        </div>
+                    </div>
+                </div>
+
                 <div id="recipe-list-container"
                     class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                     <!-- Recipe cards will be injected here -->
@@ -117,16 +163,22 @@
                     <p class="mt-1 text-sm text-gray-500">Comece adicionando sua primeira receita.</p>
                     <div class="mt-6">
                         <button type="button" id="add-recipe-btn-empty"
-                            class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-amber-600 hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500">
                             <i data-lucide="plus" class="-ml-1 mr-2 h-5 w-5"></i>
                             Nova Receita
                         </button>
                     </div>
                 </div>
+                <!-- New Message for No Search Results -->
+                <div id="no-search-results" class="hidden text-center py-20">
+                    <i data-lucide="search-x" class="mx-auto h-12 w-12 text-gray-400"></i>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900">Nenhum resultado encontrado</h3>
+                    <p class="mt-1 text-sm text-gray-500">Tente buscar por outros termos.</p>
+                </div>
             </main>
 
             <button id="add-recipe-fab"
-                class="fixed bottom-6 right-6 bg-indigo-600 text-white p-4 rounded-full shadow-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 z-30">
+                class="fixed bottom-6 right-6 bg-amber-600 text-white p-4 rounded-full shadow-lg hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 z-30">
                 <i data-lucide="plus" class="h-6 w-6"></i>
                 <span class="sr-only">Adicionar Receita</span>
             </button>
@@ -141,90 +193,83 @@
                         <i data-lucide="x" class="h-6 w-6"></i>
                     </button>
                 </div>
-
                 <div class="space-y-6 bg-white p-6 rounded-xl shadow-sm">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Foto da Receita</label>
-                        <div class="mt-1 flex items-center space-x-4">
-                            <img id="image-preview" src="https://placehold.co/400x300/e2e8f0/cbd5e0?text=Sua+Foto"
-                                alt="Preview da receita" class="h-24 w-32 object-cover rounded-md bg-gray-100">
-                            <input type="file" id="photo-upload" class="hidden" accept="image/*">
-                            <button type="button" id="select-image-btn"
+                    <div><label class="block text-sm font-medium text-gray-700">Foto da Receita</label>
+                        <div class="mt-1 flex items-center space-x-4"><img id="image-preview"
+                                src="https://placehold.co/400x300/e2e8f0/cbd5e0?text=Sua+Foto" alt="Preview da receita"
+                                class="h-24 w-32 object-cover rounded-md bg-gray-100"><input type="file"
+                                id="photo-upload" class="hidden" accept="image/*"><button type="button"
+                                id="select-image-btn"
                                 class="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">Trocar
-                                Foto</button>
-                        </div>
+                                Foto</button></div>
                     </div>
+                    <div><label for="recipe-name" class="block text-sm font-medium text-gray-700">Nome da
+                            Receita</label><input type="text" id="recipe-name" required
+                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm"></div>
 
+                    <!-- NEW: Category Selector -->
                     <div>
-                        <label for="recipe-name" class="block text-sm font-medium text-gray-700">Nome da Receita</label>
-                        <input type="text" id="recipe-name" required
-                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm">
+                        <label for="recipe-category" class="block text-sm font-medium text-gray-700">Categoria</label>
+                        <select id="recipe-category" required
+                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm focus:border-amber-500 focus:ring-amber-500">
+                            <!-- Options will be populated by JS -->
+                        </select>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
-                            <label for="prep-time" class="block text-sm font-medium text-gray-700">Tempo de
-                                Preparo</label>
-                            <input type="text" id="prep-time" placeholder="ex: 20 min"
+                            <label for="prep-time" class="block text-sm font-medium text-gray-700">Tempo de Preparo
+                                (minutos)</label>
+                            <input type="number" id="prep-time" min="0" placeholder="ex: 20"
                                 class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm">
                         </div>
                         <div>
-                            <label for="cook-time" class="block text-sm font-medium text-gray-700">Tempo de
-                                Cozimento</label>
-                            <input type="text" id="cook-time" placeholder="ex: 45 min"
+                            <label for="cook-time" class="block text-sm font-medium text-gray-700">Tempo de Cozimento
+                                (minutos)</label>
+                            <input type="number" id="cook-time" min="0" placeholder="ex: 45"
                                 class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm">
                         </div>
                         <div>
-                            <label for="servings" class="block text-sm font-medium text-gray-700">Rendimento</label>
-                            <input type="text" id="servings" placeholder="ex: 4 porções"
+                            <label for="servings" class="block text-sm font-medium text-gray-700">Rendimento
+                                (porções)</label>
+                            <input type="number" id="servings" min="1" placeholder="ex: 4"
                                 class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm">
                         </div>
                     </div>
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Ingredientes</label>
-                        <div id="ingredients-container" class="mt-2 space-y-2"></div>
-                        <button type="button" id="add-ingredient-btn"
-                            class="mt-2 text-sm font-medium text-indigo-600 hover:text-indigo-500">+ Adicionar
+                    <div><label class="block text-sm font-medium text-gray-700">Ingredientes</label>
+                        <div id="ingredients-container" class="mt-2 space-y-2"></div><button type="button"
+                            id="add-ingredient-btn"
+                            class="mt-2 text-sm font-medium text-amber-600 hover:text-amber-500">+ Adicionar
                             ingrediente</button>
                     </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Modo de Preparo</label>
-                        <div id="steps-container" class="mt-2 space-y-2"></div>
-                        <button type="button" id="add-step-btn"
-                            class="mt-2 text-sm font-medium text-indigo-600 hover:text-indigo-500">+ Adicionar
+                    <div><label class="block text-sm font-medium text-gray-700">Modo de Preparo</label>
+                        <div id="steps-container" class="mt-2 space-y-2"></div><button type="button" id="add-step-btn"
+                            class="mt-2 text-sm font-medium text-amber-600 hover:text-amber-500">+ Adicionar
                             passo</button>
                     </div>
-
                 </div>
-
-                <div class="mt-6 flex justify-end space-x-3">
-                    <button type="button" id="cancel-form-btn"
-                        class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50">Cancelar</button>
-                    <button type="submit"
-                        class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">Salvar
-                        Receita</button>
-                </div>
+                <div class="mt-6 flex justify-end space-x-3"><button type="button" id="cancel-form-btn"
+                        class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50">Cancelar</button><button
+                        type="submit"
+                        class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-amber-600 hover:bg-amber-700">Salvar
+                        Receita</button></div>
             </form>
         </div>
 
-        <!-- ===== Recipe Detail View ===== -->
+        <!-- ===== Recipe Detail View ===== (sem mudanças) -->
         <div id="recipe-detail-view" class="hidden fixed inset-0 bg-white z-50 overflow-y-auto no-scrollbar">
             <div id="detail-content" class="max-w-4xl mx-auto"></div>
         </div>
-
     </div>
 
-    <!-- ===== Global Modal / Toasts ===== -->
+    <!-- ===== Global Modals ===== -->
     <div id="modal-container"
         class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
         <div id="modal-content" class="modal-fade-in bg-white rounded-lg shadow-xl p-6 text-center max-w-sm"></div>
     </div>
-
-    <!-- ===== Global Loader ===== -->
     <div id="loader" class="hidden fixed inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50">
-        <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-indigo-500"></div>
+        <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-amber-500"></div>
     </div>
 
     <!-- Main Application Script -->
