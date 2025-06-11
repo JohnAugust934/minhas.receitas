@@ -36,8 +36,8 @@ const storage = getStorage(app);
 const appId =
   typeof __app_id !== "undefined" ? __app_id : "minhas-receitas-app";
 let currentUser = null;
-let currentRecipeId = null; // Used for editing a recipe in the form
-let viewingRecipeId = null; // Used to track the currently open recipe detail view
+let currentRecipeId = null;
+let viewingRecipeId = null;
 let recipesUnsubscribe = null;
 let allUserRecipes = [];
 const authView = document.getElementById("auth-view");
@@ -71,6 +71,7 @@ const forgotPasswordLink = document.getElementById("forgot-password-link");
 const recipeCategorySelect = document.getElementById("recipe-category");
 const favoritesFilter = document.getElementById("favorites-filter");
 const categoryFilter = document.getElementById("category-filter");
+const recipeCount = document.getElementById("recipe-count");
 
 const RECIPE_CATEGORIES = [
   "Aperitivos e Entradas",
@@ -95,7 +96,7 @@ const showView = (viewId) => {
   );
   document.getElementById(viewId).classList.remove("hidden");
   if (viewId !== "recipe-detail-view") {
-    viewingRecipeId = null; // Clear viewing state when navigating away from detail
+    viewingRecipeId = null;
   }
   if (typeof lucide !== "undefined") lucide.createIcons();
 };
@@ -482,11 +483,13 @@ recipeForm.addEventListener("submit", async (e) => {
     servings: document.getElementById("servings").value
       ? parseInt(document.getElementById("servings").value, 10)
       : null,
-    ingredients: Array.from(ingredientsContainer.querySelectorAll("input"))
-      .map((input) => input.value.trim())
+    ingredients: Array.from(
+      ingredientsContainer.querySelectorAll(".dynamic-item span")
+    )
+      .map((span) => span.textContent.trim())
       .filter((val) => val !== ""),
-    steps: Array.from(stepsContainer.querySelectorAll("input"))
-      .map((input) => input.value.trim())
+    steps: Array.from(stepsContainer.querySelectorAll(".dynamic-item span"))
+      .map((span) => span.textContent.trim())
       .filter((val) => val !== ""),
   };
   saveRecipe(recipeData, oldPhotoUrl);
@@ -520,6 +523,7 @@ function renderRecipeList() {
   recipeListContainer.innerHTML = "";
   emptyState.classList.add("hidden");
   noSearchResults.classList.add("hidden");
+  recipeCount.classList.add("hidden");
 
   if (allUserRecipes.length === 0) {
     emptyState.classList.remove("hidden");
@@ -529,16 +533,21 @@ function renderRecipeList() {
     addRecipeFab.classList.remove("hidden");
   } else {
     addRecipeFab.classList.remove("hidden");
+    recipeCount.textContent = `A exibir ${recipesToDisplay.length} de ${allUserRecipes.length} receitas.`;
+    recipeCount.classList.remove("hidden");
+
     recipesToDisplay
       .sort(
         (a, b) =>
           (b.updatedAt || b.createdAt)?.toMillis() -
           (a.updatedAt || a.createdAt)?.toMillis()
       )
-      .forEach((recipe) => {
+      .forEach((recipe, index) => {
         const card = document.createElement("div");
         card.className =
-          "bg-white rounded-lg shadow-md overflow-hidden cursor-pointer transform hover:-translate-y-1 transition-transform duration-200";
+          "bg-white rounded-lg shadow-md overflow-hidden cursor-pointer transform hover:-translate-y-1 transition-transform duration-200 recipe-card-fade-in";
+        card.style.animationDelay = `${index * 50}ms`;
+
         const timeInfo = recipe.prepTime
           ? `<span><i data-lucide="clock" class="inline-block h-4 w-4 mr-1"></i>${recipe.prepTime} min</span>`
           : "";
@@ -553,6 +562,7 @@ function renderRecipeList() {
             ? '<i data-lucide="heart" class="h-5 w-5 fill-current"></i>'
             : '<i data-lucide="heart" class="h-5 w-5"></i>'
         }</button>`;
+
         card.innerHTML = `<div class="relative"><img src="${
           recipe.photoUrl ||
           "https://placehold.co/400x300/e2e8f0/cbd5e0?text=Receita"
@@ -561,15 +571,17 @@ function renderRecipeList() {
         }" class="h-40 w-full object-cover">${categoryBadge}${favoriteIconHTML}</div><div class="p-4"><h3 class="font-semibold text-lg truncate">${
           recipe.name
         }</h3><div class="text-sm text-gray-500 mt-2 flex items-center space-x-4">${timeInfo}${servingsInfo}</div></div>`;
-        const favoriteButton = card.querySelector('[data-action="favorite"]');
+
         card.addEventListener("click", () => {
-          viewingRecipeId = recipe.id;
           renderRecipeDetail(recipe);
         });
+
+        const favoriteButton = card.querySelector('[data-action="favorite"]');
         favoriteButton.addEventListener("click", (e) => {
           e.stopPropagation();
           toggleFavoriteStatus(recipe.id, recipe.isFavorite);
         });
+
         recipeListContainer.appendChild(card);
       });
   }
@@ -643,43 +655,92 @@ function renderRecipeDetail(recipe) {
       toggleFavoriteStatus(recipe.id, recipe.isFavorite)
     );
 }
-function addDynamicInput(container, placeholder) {
+function createEditableListItem(container, placeholder, value = "") {
   const wrapper = document.createElement("div");
-  wrapper.className = "flex items-center space-x-2";
+  wrapper.className = "flex items-center space-x-2 dynamic-item";
+
+  const span = document.createElement("span");
+  span.textContent = value;
+  span.className = "flex-grow p-2";
+
   const input = document.createElement("input");
   input.type = "text";
+  input.value = value;
   input.placeholder = placeholder;
   input.className =
-    "block w-full border-gray-300 rounded-md shadow-sm sm:text-sm";
+    "hidden flex-grow block w-full border-gray-300 rounded-md shadow-sm sm:text-sm";
+
+  const editBtn = document.createElement("button");
+  editBtn.type = "button";
+  editBtn.innerHTML =
+    '<i data-lucide="pencil" class="h-5 w-5 text-gray-400 hover:text-amber-500 pointer-events-none"></i>';
+
+  const saveBtn = document.createElement("button");
+  saveBtn.type = "button";
+  saveBtn.innerHTML =
+    '<i data-lucide="check" class="h-5 w-5 text-gray-400 hover:text-green-500 pointer-events-none"></i>';
+  saveBtn.className = "hidden";
+
   const removeBtn = document.createElement("button");
   removeBtn.type = "button";
   removeBtn.innerHTML =
-    '<i data-lucide="x-circle" class="h-5 w-5 text-gray-400 hover:text-red-500"></i>';
-  removeBtn.onclick = () => wrapper.remove();
+    '<i data-lucide="x-circle" class="h-5 w-5 text-gray-400 hover:text-red-500 pointer-events-none"></i>';
+
+  const switchToEditMode = () => {
+    span.classList.add("hidden");
+    editBtn.classList.add("hidden");
+    input.classList.remove("hidden");
+    saveBtn.classList.remove("hidden");
+    input.focus();
+    input.select();
+  };
+
+  const switchToDisplayMode = () => {
+    const newValue = input.value.trim();
+    if (newValue === "" && span.textContent === "") {
+      wrapper.remove();
+      return;
+    }
+    span.textContent = newValue;
+    input.value = newValue;
+    span.classList.remove("hidden");
+    editBtn.classList.remove("hidden");
+    input.classList.add("hidden");
+    saveBtn.classList.add("hidden");
+  };
+
+  editBtn.addEventListener("click", switchToEditMode);
+  saveBtn.addEventListener("click", switchToDisplayMode);
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      switchToDisplayMode();
+    } else if (e.key === "Escape") {
+      input.value = span.textContent;
+      switchToDisplayMode();
+    }
+  });
+
+  removeBtn.addEventListener("click", () => wrapper.remove());
+
+  wrapper.appendChild(span);
   wrapper.appendChild(input);
+  wrapper.appendChild(editBtn);
+  wrapper.appendChild(saveBtn);
   wrapper.appendChild(removeBtn);
+
   container.appendChild(wrapper);
   if (typeof lucide !== "undefined") lucide.createIcons();
-  input.focus();
+
+  if (!value) {
+    switchToEditMode();
+  }
+}
+function addDynamicInput(container, placeholder) {
+  createEditableListItem(container, placeholder);
 }
 function addDynamicInputWithValue(container, placeholder, value) {
-  const wrapper = document.createElement("div");
-  wrapper.className = "flex items-center space-x-2";
-  const input = document.createElement("input");
-  input.type = "text";
-  input.placeholder = placeholder;
-  input.value = value;
-  input.className =
-    "block w-full border-gray-300 rounded-md shadow-sm sm:text-sm";
-  const removeBtn = document.createElement("button");
-  removeBtn.type = "button";
-  removeBtn.innerHTML =
-    '<i data-lucide="x-circle" class="h-5 w-5 text-gray-400 hover:text-red-500"></i>';
-  removeBtn.onclick = () => wrapper.remove();
-  wrapper.appendChild(input);
-  wrapper.appendChild(removeBtn);
-  container.appendChild(wrapper);
-  if (typeof lucide !== "undefined") lucide.createIcons();
+  createEditableListItem(container, placeholder, value);
 }
 function resetForm() {
   recipeForm.reset();

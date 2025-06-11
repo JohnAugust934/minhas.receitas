@@ -97,3 +97,21 @@ input[type="number"] {
 .toggle-switch[aria-checked="true"] .toggle-switch-circle {
   transform: translateX(1.5rem); /* 24px */
 }
+
+/* NEW: Animation for recipe cards */
+@keyframes card-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.recipe-card-fade-in {
+  /* Stagger the animation for each card */
+  animation: card-fade-in 0.5s ease-out forwards;
+  opacity: 0; /* Start as invisible */
+}
