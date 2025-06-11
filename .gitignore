@@ -13,3 +13,4 @@ js/config.js  # <-- ADICIONE ESTA LINHA
 # OS-specific files
 .DS_Store
 Thumbs.db
+js/config.js

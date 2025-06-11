@@ -56,3 +56,44 @@ body {
   outline-offset: 2px;
   border-radius: 6px;
 }
+
+/* Hide number input spinners for a cleaner look */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* New Toggle Switch Styles */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 3.5rem; /* 56px */
+  height: 2rem; /* 32px */
+  background-color: #e5e7eb; /* gray-200 */
+  border-radius: 9999px;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.toggle-switch[aria-checked="true"] {
+  background-color: #f59e0b; /* amber-500 */
+}
+
+.toggle-switch-circle {
+  position: absolute;
+  top: 0.25rem; /* 4px */
+  left: 0.25rem; /* 4px */
+  width: 1.5rem; /* 24px */
+  height: 1.5rem; /* 24px */
+  background-color: white;
+  border-radius: 9999px;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  transition: transform 0.2s ease-in-out;
+}
+
+.toggle-switch[aria-checked="true"] .toggle-switch-circle {
+  transform: translateX(1.5rem); /* 24px */
+}
