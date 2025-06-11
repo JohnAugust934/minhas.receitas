@@ -1,4 +1,3 @@
-// --- Firebase Imports (adicionado sendPasswordResetEmail) ---
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
 import {
   getAuth,
@@ -29,26 +28,20 @@ import {
   deleteObject,
 } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-storage.js";
 
-// =================================================================
-// INICIALIZAÇÃO E CONFIGURAÇÃO
-// =================================================================
-
-// A variável `firebaseConfig` é agora carregada a partir do ficheiro js/config.js
-// Certifique-se de que o ficheiro js/config.js existe e está correto.
-
-// --- Inicialização do Firebase ---
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-// ... (O resto do ficheiro permanece exatamente o mesmo)
 const appId =
   typeof __app_id !== "undefined" ? __app_id : "minhas-receitas-app";
 let currentUser = null;
 let currentRecipeId = null;
+let viewingRecipeId = null;
 let recipesUnsubscribe = null;
 let allUserRecipes = [];
+let activeTimers = {};
+
 const authView = document.getElementById("auth-view");
 const appView = document.getElementById("app-view");
 const recipeFormView = document.getElementById("recipe-form-view");
@@ -66,6 +59,7 @@ const ingredientsContainer = document.getElementById("ingredients-container");
 const stepsContainer = document.getElementById("steps-container");
 const imagePreview = document.getElementById("image-preview");
 const photoUploadInput = document.getElementById("photo-upload");
+const photoUploadPrompt = document.getElementById("photo-upload-prompt");
 const loader = document.getElementById("loader");
 const modalContainer = document.getElementById("modal-container");
 const modalContent = document.getElementById("modal-content");
@@ -77,6 +71,10 @@ const logoutBtn = document.getElementById("logout-btn");
 const searchInput = document.getElementById("search-input");
 const forgotPasswordLink = document.getElementById("forgot-password-link");
 const recipeCategorySelect = document.getElementById("recipe-category");
+const favoritesFilter = document.getElementById("favorites-filter");
+const categoryFilter = document.getElementById("category-filter");
+const recipeCount = document.getElementById("recipe-count");
+const timersContainer = document.getElementById("timers-container");
 
 const RECIPE_CATEGORIES = [
   "Aperitivos e Entradas",
@@ -93,7 +91,6 @@ const RECIPE_CATEGORIES = [
   "Outros",
 ];
 
-// --- Funções de UI ---
 const showLoader = () => loader.classList.remove("hidden");
 const hideLoader = () => loader.classList.add("hidden");
 const showView = (viewId) => {
@@ -101,6 +98,9 @@ const showView = (viewId) => {
     v.classList.add("hidden")
   );
   document.getElementById(viewId).classList.remove("hidden");
+  if (viewId !== "recipe-detail-view") {
+    viewingRecipeId = null;
+  }
   if (typeof lucide !== "undefined") lucide.createIcons();
 };
 const showModal = (
@@ -123,25 +123,19 @@ const showModal = (
     default:
       iconSvg = `<div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100"><i data-lucide="info" class="h-6 w-6 text-blue-600"></i></div>`;
   }
-  modalContent.innerHTML = `
-        ${iconSvg}
-        <h3 class="mt-3 text-lg leading-6 font-medium text-gray-900">${title}</h3>
-        <div class="mt-2 text-sm text-gray-500"><p>${message}</p></div>
-        <div class="mt-4 flex justify-center space-x-3">
-            ${buttons
-              .map(
-                (btn) =>
-                  `<button id="modal-btn-${btn.text
-                    .toLowerCase()
-                    .replace(
-                      / /g,
-                      "-"
-                    )}" class="px-4 py-2 text-sm font-medium text-white rounded-md shadow-sm ${
-                    btn.class
-                  } hover:opacity-90">${btn.text}</button>`
-              )
-              .join("")}
-        </div>`;
+  modalContent.innerHTML = `${iconSvg}<h3 class="mt-3 text-lg leading-6 font-medium text-gray-900">${title}</h3><div class="mt-2 text-sm text-gray-500"><p>${message}</p></div><div class="mt-4 flex justify-center space-x-3">${buttons
+    .map(
+      (btn) =>
+        `<button id="modal-btn-${btn.text
+          .toLowerCase()
+          .replace(
+            / /g,
+            "-"
+          )}" class="px-4 py-2 text-sm font-medium text-white rounded-md shadow-sm ${
+          btn.class
+        } hover:opacity-90">${btn.text}</button>`
+    )
+    .join("")}</div>`;
   modalContainer.classList.remove("hidden");
   if (typeof lucide !== "undefined") lucide.createIcons();
   buttons.forEach((btn) => {
@@ -157,35 +151,11 @@ const showModal = (
 };
 
 const showPasswordModal = () => {
-  modalContent.innerHTML = `
-        <div class="text-left">
-            <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Alterar Senha</h3>
-            <form id="change-password-form">
-                <div class="space-y-4">
-                    <div>
-                        <label for="new-password" class="block text-sm font-medium text-gray-700">Nova Senha</label>
-                        <input type="password" id="new-password" required minlength="6" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm focus:ring-amber-500 focus:border-amber-500" placeholder="Mínimo de 6 caracteres">
-                    </div>
-                    <div>
-                        <label for="confirm-password" class="block text-sm font-medium text-gray-700">Confirmar Nova Senha</label>
-                        <input type="password" id="confirm-password" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm focus:ring-amber-500 focus:border-amber-500" placeholder="Repita a nova senha">
-                    </div>
-                </div>
-                <div class="mt-6 flex justify-end space-x-3">
-                    <button type="button" id="cancel-password-change" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50">Cancelar</button>
-                    <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-amber-600 hover:bg-amber-700">Salvar</button>
-                </div>
-            </form>
-        </div>
-    `;
+  modalContent.innerHTML = `<div class="text-left"><h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Alterar Senha</h3><form id="change-password-form"><div class="space-y-4"><div><label for="new-password" class="block text-sm font-medium text-gray-700">Nova Senha</label><input type="password" id="new-password" required minlength="6" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm focus:ring-amber-500 focus:border-amber-500" placeholder="Mínimo de 6 caracteres"></div><div><label for="confirm-password" class="block text-sm font-medium text-gray-700">Confirmar Nova Senha</label><input type="password" id="confirm-password" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm focus:ring-amber-500 focus:border-amber-500" placeholder="Repita a nova senha"></div></div><div class="mt-6 flex justify-end space-x-3"><button type="button" id="cancel-password-change" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50">Cancelar</button><button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-amber-600 hover:bg-amber-700">Salvar</button></div></form></div>`;
   modalContainer.classList.remove("hidden");
-
   document
     .getElementById("cancel-password-change")
-    .addEventListener("click", () => {
-      modalContainer.classList.add("hidden");
-    });
-
+    .addEventListener("click", () => modalContainer.classList.add("hidden"));
   document
     .getElementById("change-password-form")
     .addEventListener("submit", async (e) => {
@@ -205,10 +175,10 @@ const showPasswordModal = () => {
       } catch (error) {
         hideLoader();
         console.error("Erro ao alterar senha:", error);
-        let errorMessage = "Ocorreu um erro. Por favor, tente novamente.";
+        let errorMessage = "Ocorreu um erro.";
         if (error.code === "auth/requires-recent-login") {
           errorMessage =
-            "Esta operação é sensível e exige autenticação recente. Por favor, faça login novamente antes de tentar alterar a senha.";
+            "Esta operação é sensível e exige autenticação recente. Por favor, faça login novamente.";
         }
         modalContainer.classList.add("hidden");
         showModal("Erro ao Alterar Senha", errorMessage, "error");
@@ -217,22 +187,7 @@ const showPasswordModal = () => {
 };
 
 const handleForgotPassword = () => {
-  modalContent.innerHTML = `
-        <div class="text-left">
-            <h3 class="text-lg leading-6 font-medium text-gray-900 mb-2">Redefinir Senha</h3>
-            <p class="text-sm text-gray-500 mb-4">Insira seu e-mail para receber um link de redefinição.</p>
-            <form id="reset-password-form">
-                <div>
-                    <label for="reset-email" class="sr-only">Email</label>
-                    <input type="email" id="reset-email" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm focus:ring-amber-500 focus:border-amber-500" placeholder="seu@email.com">
-                </div>
-                <div class="mt-6 flex justify-end space-x-3">
-                    <button type="button" id="cancel-reset" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50">Cancelar</button>
-                    <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-amber-600 hover:bg-amber-700">Enviar Link</button>
-                </div>
-            </form>
-        </div>
-    `;
+  modalContent.innerHTML = `<div class="text-left"><h3 class="text-lg leading-6 font-medium text-gray-900 mb-2">Redefinir Senha</h3><p class="text-sm text-gray-500 mb-4">Insira seu e-mail para receber um link de redefinição.</p><form id="reset-password-form"><div><label for="reset-email" class="sr-only">Email</label><input type="email" id="reset-email" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm focus:ring-amber-500 focus:border-amber-500" placeholder="seu@email.com"></div><div class="mt-6 flex justify-end space-x-3"><button type="button" id="cancel-reset" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50">Cancelar</button><button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-amber-600 hover:bg-amber-700">Enviar Link</button></div></form></div>`;
   modalContainer.classList.remove("hidden");
   document
     .getElementById("cancel-reset")
@@ -255,28 +210,42 @@ const handleForgotPassword = () => {
       } catch (error) {
         hideLoader();
         modalContainer.classList.add("hidden");
-        console.error("Erro ao enviar email de redefinição:", error);
+        console.error("Erro ao enviar email:", error);
         showModal(
           "Erro",
-          "Não foi possível enviar o email de redefinição. Por favor, tente novamente mais tarde.",
+          "Não foi possível enviar o email de redefinição.",
           "error"
         );
       }
     });
 };
 
-function populateCategorySelect() {
-  recipeCategorySelect.innerHTML =
-    '<option value="" disabled selected>Selecione uma categoria</option>';
-  RECIPE_CATEGORIES.forEach((category) => {
-    const option = document.createElement("option");
-    option.value = category;
-    option.textContent = category;
-    recipeCategorySelect.appendChild(option);
+function populateCategorySelects() {
+  const selects = [recipeCategorySelect, categoryFilter];
+  selects.forEach((select) => {
+    if (!select) return;
+    select.innerHTML = "";
+    const defaultOptionText =
+      select.id === "category-filter"
+        ? "Todas as Categorias"
+        : "Selecione uma categoria";
+    const defaultOption = document.createElement("option");
+    defaultOption.value = "all";
+    defaultOption.textContent = defaultOptionText;
+    if (select.id !== "category-filter") {
+      defaultOption.disabled = true;
+      defaultOption.selected = true;
+    }
+    select.appendChild(defaultOption);
+    RECIPE_CATEGORIES.forEach((category) => {
+      const option = document.createElement("option");
+      option.value = category;
+      option.textContent = category;
+      select.appendChild(option);
+    });
   });
 }
 
-// --- Lógica de Autenticação ---
 onAuthStateChanged(auth, (user) => {
   if (user) {
     currentUser = user;
@@ -295,8 +264,6 @@ onAuthStateChanged(auth, (user) => {
   }
   hideLoader();
 });
-
-// --- Lógica de Imagem com Firebase Storage ---
 async function uploadImage(file) {
   if (!file || !currentUser) return null;
   showLoader();
@@ -309,7 +276,7 @@ async function uploadImage(file) {
     return downloadURL;
   } catch (error) {
     hideLoader();
-    console.error("Falha no upload para o Firebase Storage:", error);
+    console.error("Falha no upload:", error);
     showModal("Erro de Upload", "Não foi possível enviar a imagem.", "error");
     return null;
   }
@@ -319,15 +286,13 @@ async function deleteImage(photoUrl) {
   try {
     const imageRef = ref(storage, photoUrl);
     await deleteObject(imageRef);
-    console.log("Imagem deletada do Firebase Storage com sucesso.");
+    console.log("Imagem deletada.");
   } catch (error) {
     if (error.code !== "storage/object-not-found") {
-      console.error("Falha ao deletar imagem do Firebase Storage:", error);
+      console.error("Falha ao deletar imagem:", error);
     }
   }
 }
-
-// --- Lógica do Firestore ---
 function getRecipes() {
   if (recipesUnsubscribe) recipesUnsubscribe();
   const recipesRef = collection(
@@ -347,9 +312,20 @@ function getRecipes() {
         ...doc.data(),
       }));
       renderRecipeList();
+      if (viewingRecipeId) {
+        const updatedRecipe = allUserRecipes.find(
+          (r) => r.id === viewingRecipeId
+        );
+        if (updatedRecipe) {
+          renderRecipeDetail(updatedRecipe);
+        } else {
+          viewingRecipeId = null;
+          showView("app-view");
+        }
+      }
     },
     (error) => {
-      console.error("Error fetching recipes: ", error);
+      console.error("Erro ao buscar receitas:", error);
       showModal("Erro", "Não foi possível carregar as receitas.", "error");
     }
   );
@@ -382,6 +358,7 @@ async function saveRecipe(recipeData, oldPhotoUrl = null) {
     } else {
       await addDoc(recipesRef, {
         ...recipeData,
+        isFavorite: false,
         createdAt: serverTimestamp(),
         userId: currentUser.uid,
       });
@@ -392,7 +369,7 @@ async function saveRecipe(recipeData, oldPhotoUrl = null) {
     resetForm();
   } catch (error) {
     hideLoader();
-    console.error("Error saving recipe: ", error);
+    console.error("Erro ao salvar receita:", error);
     showModal("Erro", "Não foi possível salvar a receita.", "error");
   }
 }
@@ -417,97 +394,50 @@ async function deleteRecipe(recipeId) {
     }
     await deleteDoc(docRef);
     hideLoader();
-    showModal(
-      "Receita Excluída",
-      "A receita foi removida com sucesso.",
-      "success"
-    );
+    showModal("Receita Excluída", "A receita foi removida.", "success");
     showView("app-view");
   } catch (error) {
     hideLoader();
-    console.error("Error deleting recipe: ", error);
+    console.error("Erro ao excluir receita:", error);
     showModal("Erro", "Não foi possível excluir a receita.", "error");
   }
 }
+async function toggleFavoriteStatus(recipeId, currentStatus) {
+  const docRef = doc(
+    db,
+    "artifacts",
+    appId,
+    "users",
+    currentUser.uid,
+    "recipes",
+    recipeId
+  );
+  try {
+    await updateDoc(docRef, { isFavorite: !currentStatus });
+  } catch (error) {
+    console.error("Erro ao favoritar:", error);
+    showModal(
+      "Erro",
+      "Não foi possível atualizar o status de favorito.",
+      "error"
+    );
+  }
+}
 
-// --- Validação do Formulário ---
 function validateRecipeForm() {
   const name = document.getElementById("recipe-name").value.trim();
   const category = document.getElementById("recipe-category").value;
-  const prepTime = document.getElementById("prep-time").value;
-  const cookTime = document.getElementById("cook-time").value;
-  const servings = document.getElementById("servings").value;
-  const ingredients = Array.from(ingredientsContainer.querySelectorAll("input"))
-    .map((input) => input.value.trim())
-    .filter((val) => val !== "");
-  const steps = Array.from(stepsContainer.querySelectorAll("input"))
-    .map((input) => input.value.trim())
-    .filter((val) => val !== "");
   if (!name) {
     showModal("Erro de Validação", "O nome da receita é obrigatório.", "error");
     return false;
   }
-  if (!category) {
-    showModal(
-      "Erro de Validação",
-      "Selecione uma categoria para a receita.",
-      "error"
-    );
-    return false;
-  }
-  if (
-    prepTime &&
-    (parseInt(prepTime) < 0 || !Number.isInteger(Number(prepTime)))
-  ) {
-    showModal(
-      "Erro de Validação",
-      "O tempo de preparo deve ser um número inteiro e positivo.",
-      "error"
-    );
-    return false;
-  }
-  if (
-    cookTime &&
-    (parseInt(cookTime) < 0 || !Number.isInteger(Number(cookTime)))
-  ) {
-    showModal(
-      "Erro de Validação",
-      "O tempo de cozimento deve ser um número inteiro e positivo.",
-      "error"
-    );
-    return false;
-  }
-  if (
-    servings &&
-    (parseInt(servings) <= 0 || !Number.isInteger(Number(servings)))
-  ) {
-    showModal(
-      "Erro de Validação",
-      "O rendimento (porções) deve ser um número inteiro e positivo.",
-      "error"
-    );
-    return false;
-  }
-  if (ingredients.length === 0) {
-    showModal(
-      "Erro de Validação",
-      "Adicione pelo menos um ingrediente.",
-      "error"
-    );
-    return false;
-  }
-  if (steps.length === 0) {
-    showModal(
-      "Erro de Validação",
-      "Adicione pelo menos um passo no modo de preparo.",
-      "error"
-    );
+  if (!category || category === "all") {
+    showModal("Erro de Validação", "Selecione uma categoria.", "error");
     return false;
   }
   return true;
 }
 
-// --- Lógica do Formulário ---
 recipeForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   if (!validateRecipeForm()) {
@@ -556,77 +486,112 @@ recipeForm.addEventListener("submit", async (e) => {
     servings: document.getElementById("servings").value
       ? parseInt(document.getElementById("servings").value, 10)
       : null,
-    ingredients: Array.from(ingredientsContainer.querySelectorAll("input"))
-      .map((input) => input.value.trim())
+    ingredients: Array.from(
+      ingredientsContainer.querySelectorAll(".dynamic-item span")
+    )
+      .map((span) => span.textContent.trim())
       .filter((val) => val !== ""),
-    steps: Array.from(stepsContainer.querySelectorAll("input"))
-      .map((input) => input.value.trim())
+    steps: Array.from(stepsContainer.querySelectorAll(".dynamic-item span"))
+      .map((span) => span.textContent.trim())
       .filter((val) => val !== ""),
   };
   saveRecipe(recipeData, oldPhotoUrl);
 });
 
-// --- Lógica de Renderização e UI ---
 function renderRecipeList() {
   const searchTerm = searchInput.value.toLowerCase();
-  const filteredRecipes = allUserRecipes.filter((recipe) => {
-    const nameMatch = recipe.name.toLowerCase().includes(searchTerm);
-    const ingredients = recipe.ingredients || [];
-    const ingredientsMatch = ingredients.some((ing) =>
-      ing.toLowerCase().includes(searchTerm)
+  const showOnlyFavorites =
+    favoritesFilter.getAttribute("aria-checked") === "true";
+  const selectedCategory = categoryFilter.value;
+
+  let recipesToDisplay = allUserRecipes;
+  if (showOnlyFavorites) {
+    recipesToDisplay = recipesToDisplay.filter((recipe) => recipe.isFavorite);
+  }
+  if (selectedCategory !== "all") {
+    recipesToDisplay = recipesToDisplay.filter(
+      (recipe) => recipe.category === selectedCategory
     );
-    const categoryMatch = recipe.category
-      ? recipe.category.toLowerCase().includes(searchTerm)
-      : false;
-    return nameMatch || ingredientsMatch || categoryMatch;
-  });
+  }
+  if (searchTerm) {
+    recipesToDisplay = recipesToDisplay.filter((recipe) => {
+      const nameMatch = recipe.name.toLowerCase().includes(searchTerm);
+      const ingredientsMatch = (recipe.ingredients || []).some((ing) =>
+        ing.toLowerCase().includes(searchTerm)
+      );
+      return nameMatch || ingredientsMatch;
+    });
+  }
 
   recipeListContainer.innerHTML = "";
   emptyState.classList.add("hidden");
   noSearchResults.classList.add("hidden");
+  recipeCount.classList.add("hidden");
 
   if (allUserRecipes.length === 0) {
     emptyState.classList.remove("hidden");
     addRecipeFab.classList.add("hidden");
-  } else if (filteredRecipes.length === 0) {
+  } else if (recipesToDisplay.length === 0) {
     noSearchResults.classList.remove("hidden");
     addRecipeFab.classList.remove("hidden");
   } else {
     addRecipeFab.classList.remove("hidden");
-    filteredRecipes
+    recipeCount.textContent = `A exibir ${recipesToDisplay.length} de ${allUserRecipes.length} receitas.`;
+    recipeCount.classList.remove("hidden");
+
+    recipesToDisplay
       .sort(
         (a, b) =>
           (b.updatedAt || b.createdAt)?.toMillis() -
           (a.updatedAt || a.createdAt)?.toMillis()
       )
-      .forEach((recipe) => {
+      .forEach((recipe, index) => {
         const card = document.createElement("div");
         card.className =
-          "bg-white rounded-lg shadow-md overflow-hidden cursor-pointer transform hover:-translate-y-1 transition-transform duration-200";
-        let timeInfo = recipe.prepTime
+          "bg-white rounded-lg shadow-md overflow-hidden cursor-pointer transform hover:-translate-y-1 transition-transform duration-200 recipe-card-fade-in";
+        card.style.animationDelay = `${index * 50}ms`;
+
+        const timeInfo = recipe.prepTime
           ? `<span><i data-lucide="clock" class="inline-block h-4 w-4 mr-1"></i>${recipe.prepTime} min</span>`
           : "";
-        let servingsInfo = recipe.servings
+        const servingsInfo = recipe.servings
           ? `<span><i data-lucide="users" class="inline-block h-4 w-4 mr-1"></i>${recipe.servings}</span>`
           : "";
-        let categoryBadge = recipe.category
+        const categoryBadge = recipe.category
           ? `<div class="absolute top-2 left-2 bg-amber-500 text-white text-xs font-bold px-2 py-1 rounded-full">${recipe.category}</div>`
           : "";
+        const favoriteIconHTML = `<button data-action="favorite" class="absolute top-2 right-2 p-1 bg-white/70 rounded-full text-red-500 hover:bg-white">${
+          recipe.isFavorite
+            ? '<i data-lucide="heart" class="h-5 w-5 fill-current"></i>'
+            : '<i data-lucide="heart" class="h-5 w-5"></i>'
+        }</button>`;
+
         card.innerHTML = `<div class="relative"><img src="${
           recipe.photoUrl ||
           "https://placehold.co/400x300/e2e8f0/cbd5e0?text=Receita"
         }" alt="Foto de ${
           recipe.name
-        }" class="h-40 w-full object-cover">${categoryBadge}</div><div class="p-4"><h3 class="font-semibold text-lg truncate">${
+        }" class="h-40 w-full object-cover">${categoryBadge}${favoriteIconHTML}</div><div class="p-4"><h3 class="font-semibold text-lg truncate">${
           recipe.name
         }</h3><div class="text-sm text-gray-500 mt-2 flex items-center space-x-4">${timeInfo}${servingsInfo}</div></div>`;
-        card.addEventListener("click", () => renderRecipeDetail(recipe));
+
+        card.addEventListener("click", () => {
+          renderRecipeDetail(recipe);
+        });
+
+        const favoriteButton = card.querySelector('[data-action="favorite"]');
+        favoriteButton.addEventListener("click", (e) => {
+          e.stopPropagation();
+          toggleFavoriteStatus(recipe.id, recipe.isFavorite);
+        });
+
         recipeListContainer.appendChild(card);
       });
   }
   if (typeof lucide !== "undefined") lucide.createIcons();
 }
 function renderRecipeDetail(recipe) {
+  viewingRecipeId = recipe.id;
   const prepTimeHTML = recipe.prepTime
     ? `<div class="flex items-center"><i data-lucide="timer" class="h-5 w-5 mr-2 text-amber-500"></i>Preparo: <strong>${recipe.prepTime} min</strong></div>`
     : "";
@@ -639,32 +604,24 @@ function renderRecipeDetail(recipe) {
   const categoryHTML = recipe.category
     ? `<div class="flex items-center"><i data-lucide="tag" class="h-5 w-5 mr-2 text-amber-500"></i>Categoria: <strong>${recipe.category}</strong></div>`
     : "";
+  const ingredientsHTML = (recipe.ingredients || [])
+    .map((ing) => `<li>${parseForTimers(ing, recipe.name)}</li>`)
+    .join("");
+  const stepsHTML = (recipe.steps || [])
+    .map((step) => `<li>${parseForTimers(step, recipe.name)}</li>`)
+    .join("");
 
-  detailContent.innerHTML = `<div class="relative"><img src="${
+  detailContent.innerHTML = `<div class="bg-white rounded-lg shadow-xl overflow-hidden"><div class="relative"><img src="${
     recipe.photoUrl || "https://placehold.co/800x400/e2e8f0/cbd5e0?text=Receita"
   }" alt="${
     recipe.name
-  }" class="w-full h-64 md:h-80 object-cover"><button id="back-from-detail" class="absolute top-4 left-4 bg-white bg-opacity-75 rounded-full p-2 text-gray-800 hover:bg-opacity-100"><i data-lucide="arrow-left" class="h-6 w-6"></i></button><div class="absolute top-4 right-4 flex space-x-2"><button id="edit-recipe-btn-detail" class="bg-white bg-opacity-75 rounded-full p-2 text-gray-800 hover:bg-opacity-100"><i data-lucide="edit" class="h-6 w-6"></i></button><button id="delete-recipe-btn-detail" class="bg-white bg-opacity-75 rounded-full p-2 text-red-600 hover:bg-opacity-100"><i data-lucide="trash-2" class="h-6 w-6"></i></button></div></div><div class="p-6 md:p-8"><h1 class="text-3xl md:text-4xl font-bold mb-4">${
+  }" class="w-full h-64 md:h-80 object-cover"><button id="back-from-detail" class="absolute top-4 left-4 bg-white/80 backdrop-blur-sm rounded-full p-2 text-gray-800 hover:bg-white"><i data-lucide="arrow-left" class="h-6 w-6"></i></button></div><div class="p-6 md:p-8"><div class="flex justify-between items-start mb-4"><h1 class="text-3xl md:text-4xl font-bold text-gray-900">${
     recipe.name
-  }</h1><div class="flex flex-wrap gap-x-6 gap-y-2 text-gray-600 border-b pb-4 mb-6">${prepTimeHTML}${cookTimeHTML}${servingsHTML}${categoryHTML}</div><div class="grid grid-cols-1 md:grid-cols-3 gap-8"><div class="md:col-span-1"><h2 class="text-2xl font-semibold mb-3">Ingredientes</h2><ul class="space-y-2">${(
-    recipe.ingredients || []
-  )
-    .map(
-      (ing) =>
-        `<li class="flex items-start"><span class="mr-2 mt-1 text-amber-500">•</span><span>${ing}</span></li>`
-    )
-    .join(
-      ""
-    )}</ul></div><div class="md:col-span-2"><h2 class="text-2xl font-semibold mb-3">Modo de Preparo</h2><ol class="space-y-4">${(
-    recipe.steps || []
-  )
-    .map(
-      (step, index) =>
-        `<li class="flex items-start"><div class="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-amber-500 text-white font-bold mr-4">${
-          index + 1
-        }</div><p class="pt-1">${step}</p></li>`
-    )
-    .join("")}</ol></div></div></div>`;
+  }</h1><div class="flex-shrink-0 ml-4 flex space-x-2"><button id="print-btn-detail" class="p-2 rounded-full text-gray-600 hover:bg-gray-100"><i data-lucide="printer" class="h-7 w-7"></i></button><button id="favorite-btn-detail" class="p-2 rounded-full text-red-500 hover:bg-red-100">${
+    recipe.isFavorite
+      ? '<i data-lucide="heart" class="h-7 w-7 fill-current"></i>'
+      : '<i data-lucide="heart" class="h-7 w-7"></i>'
+  }</button></div></div><div class="flex flex-wrap gap-x-6 gap-y-2 text-gray-600 border-b pb-4 mb-6">${prepTimeHTML}${cookTimeHTML}${servingsHTML}${categoryHTML}</div><div class="space-y-8"><section> <h2 class="text-2xl font-semibold mb-3 text-gray-800">Ingredientes</h2><ul class="list-disc list-inside space-y-2 text-gray-700">${ingredientsHTML}</ul></section><section><h2 class="text-2xl font-semibold mb-3 text-gray-800">Modo de Preparo</h2><ol class="list-decimal list-inside space-y-4 text-gray-700">${stepsHTML}</ol></section></div><div class="mt-8 pt-6 border-t flex justify-end space-x-3"><button id="edit-recipe-btn-detail" class="inline-flex items-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"><i data-lucide="edit" class="mr-2 h-5 w-5"></i>Editar</button><button id="delete-recipe-btn-detail" class="inline-flex items-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700"><i data-lucide="trash-2" class="mr-2 h-5 w-5"></i>Excluir</button></div></div></div>`;
   showView("recipe-detail-view");
   document
     .getElementById("back-from-detail")
@@ -689,44 +646,103 @@ function renderRecipeDetail(recipe) {
         ]
       );
     });
+  document
+    .getElementById("favorite-btn-detail")
+    .addEventListener("click", () =>
+      toggleFavoriteStatus(recipe.id, recipe.isFavorite)
+    );
+  document
+    .getElementById("print-btn-detail")
+    .addEventListener("click", () => window.print());
+  document.querySelectorAll(".timer-link").forEach((link) =>
+    link.addEventListener("click", (e) => {
+      const minutes = parseInt(e.target.dataset.minutes, 10);
+      if (!isNaN(minutes)) {
+        createTimer(minutes, recipe.name);
+      }
+    })
+  );
+}
+function createEditableListItem(container, placeholder, value = "") {
+  const wrapper = document.createElement("div");
+  wrapper.className = "flex items-center space-x-2 dynamic-item group";
+  const handle = document.createElement("span");
+  handle.className =
+    "drag-handle cursor-grab text-gray-400 hover:text-gray-600";
+  handle.innerHTML =
+    '<i data-lucide="grip-vertical" class="h-5 w-5 pointer-events-none"></i>';
+  const span = document.createElement("span");
+  span.textContent = value;
+  span.className = "flex-grow p-2";
+  const input = document.createElement("input");
+  input.type = "text";
+  input.value = value;
+  input.placeholder = placeholder;
+  input.className =
+    "hidden flex-grow block w-full border-gray-300 rounded-md shadow-sm sm:text-sm";
+  const editBtn = document.createElement("button");
+  editBtn.type = "button";
+  editBtn.innerHTML =
+    '<i data-lucide="pencil" class="h-5 w-5 text-gray-400 hover:text-amber-500 pointer-events-none"></i>';
+  const saveBtn = document.createElement("button");
+  saveBtn.type = "button";
+  saveBtn.innerHTML =
+    '<i data-lucide="check" class="h-5 w-5 text-gray-400 hover:text-green-500 pointer-events-none"></i>';
+  saveBtn.className = "hidden";
+  const removeBtn = document.createElement("button");
+  removeBtn.type = "button";
+  removeBtn.innerHTML =
+    '<i data-lucide="x-circle" class="h-5 w-5 text-gray-400 hover:text-red-500 pointer-events-none"></i>';
+  const switchToEditMode = () => {
+    span.classList.add("hidden");
+    editBtn.classList.add("hidden");
+    input.classList.remove("hidden");
+    saveBtn.classList.remove("hidden");
+    input.focus();
+    input.select();
+  };
+  const switchToDisplayMode = () => {
+    const newValue = input.value.trim();
+    if (newValue === "" && span.textContent === "") {
+      wrapper.remove();
+      return;
+    }
+    span.textContent = newValue;
+    input.value = newValue;
+    span.classList.remove("hidden");
+    editBtn.classList.remove("hidden");
+    input.classList.add("hidden");
+    saveBtn.classList.add("hidden");
+  };
+  editBtn.addEventListener("click", switchToEditMode);
+  saveBtn.addEventListener("click", switchToDisplayMode);
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      switchToDisplayMode();
+    } else if (e.key === "Escape") {
+      input.value = span.textContent;
+      switchToDisplayMode();
+    }
+  });
+  removeBtn.addEventListener("click", () => wrapper.remove());
+  wrapper.appendChild(handle);
+  wrapper.appendChild(span);
+  wrapper.appendChild(input);
+  wrapper.appendChild(editBtn);
+  wrapper.appendChild(saveBtn);
+  wrapper.appendChild(removeBtn);
+  container.appendChild(wrapper);
+  if (typeof lucide !== "undefined") lucide.createIcons();
+  if (!value) {
+    switchToEditMode();
+  }
 }
 function addDynamicInput(container, placeholder) {
-  const wrapper = document.createElement("div");
-  wrapper.className = "flex items-center space-x-2";
-  const input = document.createElement("input");
-  input.type = "text";
-  input.placeholder = placeholder;
-  input.className =
-    "block w-full border-gray-300 rounded-md shadow-sm sm:text-sm";
-  const removeBtn = document.createElement("button");
-  removeBtn.type = "button";
-  removeBtn.innerHTML =
-    '<i data-lucide="x-circle" class="h-5 w-5 text-gray-400 hover:text-red-500"></i>';
-  removeBtn.onclick = () => wrapper.remove();
-  wrapper.appendChild(input);
-  wrapper.appendChild(removeBtn);
-  container.appendChild(wrapper);
-  if (typeof lucide !== "undefined") lucide.createIcons();
-  input.focus();
+  createEditableListItem(container, placeholder);
 }
 function addDynamicInputWithValue(container, placeholder, value) {
-  const wrapper = document.createElement("div");
-  wrapper.className = "flex items-center space-x-2";
-  const input = document.createElement("input");
-  input.type = "text";
-  input.placeholder = placeholder;
-  input.value = value;
-  input.className =
-    "block w-full border-gray-300 rounded-md shadow-sm sm:text-sm";
-  const removeBtn = document.createElement("button");
-  removeBtn.type = "button";
-  removeBtn.innerHTML =
-    '<i data-lucide="x-circle" class="h-5 w-5 text-gray-400 hover:text-red-500"></i>';
-  removeBtn.onclick = () => wrapper.remove();
-  wrapper.appendChild(input);
-  wrapper.appendChild(removeBtn);
-  container.appendChild(wrapper);
-  if (typeof lucide !== "undefined") lucide.createIcons();
+  createEditableListItem(container, placeholder, value);
 }
 function resetForm() {
   recipeForm.reset();
@@ -735,7 +751,9 @@ function resetForm() {
   stepsContainer.innerHTML = "";
   addDynamicInput(ingredientsContainer, "ex: 2 xícaras de farinha");
   addDynamicInput(stepsContainer, "ex: Misture os ingredientes secos");
-  imagePreview.src = "https://placehold.co/400x300/e2e8f0/cbd5e0?text=Sua+Foto";
+  imagePreview.src = "";
+  imagePreview.classList.add("hidden");
+  photoUploadPrompt.classList.remove("hidden");
   photoUploadInput.value = "";
 }
 function showRecipeForm(recipeToEdit = null) {
@@ -749,9 +767,11 @@ function showRecipeForm(recipeToEdit = null) {
     document.getElementById("prep-time").value = recipeToEdit.prepTime || "";
     document.getElementById("cook-time").value = recipeToEdit.cookTime || "";
     document.getElementById("servings").value = recipeToEdit.servings || "";
-    imagePreview.src =
-      recipeToEdit.photoUrl ||
-      "https://placehold.co/400x300/e2e8f0/cbd5e0?text=Sua+Foto";
+    if (recipeToEdit.photoUrl) {
+      imagePreview.src = recipeToEdit.photoUrl;
+      imagePreview.classList.remove("hidden");
+      photoUploadPrompt.classList.add("hidden");
+    }
     ingredientsContainer.innerHTML = "";
     (recipeToEdit.ingredients || []).forEach((ing) =>
       addDynamicInputWithValue(
@@ -771,10 +791,102 @@ function showRecipeForm(recipeToEdit = null) {
   } else {
     document.getElementById("form-title").textContent = "Nova Receita";
   }
+  new Sortable(ingredientsContainer, {
+    animation: 150,
+    handle: ".drag-handle",
+    ghostClass: "sortable-ghost",
+    chosenClass: "sortable-chosen",
+  });
+  new Sortable(stepsContainer, {
+    animation: 150,
+    handle: ".drag-handle",
+    ghostClass: "sortable-ghost",
+    chosenClass: "sortable-chosen",
+  });
   showView("recipe-form-view");
 }
 
-// --- Event Listeners e Carregamento Inicial ---
+function parseForTimers(text, recipeName) {
+  const timeRegex = /(\d+)\s*(minuto|minutos|min|mins|hora|horas|hr|hrs)/gi;
+  return text.replace(timeRegex, (match, value, unit) => {
+    let minutes = parseInt(value, 10);
+    if (unit.match(/hora|horas|hr|hrs/i)) {
+      minutes *= 60;
+    }
+    return `<span class="timer-link" data-minutes="${minutes}" data-recipe-name="${recipeName}">${match}</span>`;
+  });
+}
+function createTimer(minutes, recipeName) {
+  const id = `timer-${Date.now()}`;
+  let seconds = minutes * 60;
+  const timerEl = document.createElement("div");
+  timerEl.id = id;
+  timerEl.className =
+    "bg-white rounded-lg shadow-lg p-3 w-64 flex items-center justify-between";
+  const updateDisplay = () => {
+    const mins = Math.floor(seconds / 60)
+      .toString()
+      .padStart(2, "0");
+    const secs = (seconds % 60).toString().padStart(2, "0");
+    timerEl.querySelector(".time-display").textContent = `${mins}:${secs}`;
+  };
+  const interval = setInterval(() => {
+    seconds--;
+    if (seconds < 0) {
+      clearInterval(interval);
+      timerEl.classList.add("bg-green-100");
+      timerEl.querySelector(".pause-btn").classList.add("hidden");
+      showModal(
+        "Temporizador Terminado",
+        `O temporizador para "${recipeName}" acabou!`,
+        "success"
+      );
+    } else {
+      updateDisplay();
+    }
+  }, 1000);
+  activeTimers[id] = { interval, isPaused: false };
+  timerEl.innerHTML = `<div class="flex-grow"><div class="text-sm font-semibold truncate">${recipeName}</div><div class="text-3xl font-mono time-display"></div></div><div class="flex flex-col space-y-1 ml-2"><button class="pause-btn p-1 text-gray-500 hover:text-amber-600"><i data-lucide="pause-circle" class="h-5 w-5 pointer-events-none"></i></button><button class="close-btn p-1 text-gray-500 hover:text-red-600"><i data-lucide="x-circle" class="h-5 w-5 pointer-events-none"></i></button></div>`;
+  timersContainer.appendChild(timerEl);
+  updateDisplay();
+  if (typeof lucide !== "undefined") lucide.createIcons();
+  timerEl.querySelector(".pause-btn").addEventListener("click", () => {
+    if (activeTimers[id].isPaused) {
+      activeTimers[id].interval = setInterval(() => {
+        seconds--;
+        if (seconds < 0) {
+          clearInterval(activeTimers[id].interval);
+          timerEl.classList.add("bg-green-100");
+          timerEl.querySelector(".pause-btn").classList.add("hidden");
+          showModal(
+            "Temporizador Terminado",
+            `O temporizador para "${recipeName}" acabou!`,
+            "success"
+          );
+        } else {
+          updateDisplay();
+        }
+      }, 1000);
+      timerEl
+        .querySelector(".pause-btn i")
+        .setAttribute("data-lucide", "pause-circle");
+    } else {
+      clearInterval(activeTimers[id].interval);
+      timerEl
+        .querySelector(".pause-btn i")
+        .setAttribute("data-lucide", "play-circle");
+    }
+    activeTimers[id].isPaused = !activeTimers[id].isPaused;
+    if (typeof lucide !== "undefined") lucide.createIcons();
+  });
+  timerEl.querySelector(".close-btn").addEventListener("click", () => {
+    clearInterval(activeTimers[id].interval);
+    delete activeTimers[id];
+    timerEl.remove();
+  });
+}
+
+window.toggleFavorite = toggleFavoriteStatus;
 document.addEventListener("DOMContentLoaded", () => {
   loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -852,9 +964,6 @@ document.addEventListener("DOMContentLoaded", () => {
       addDynamicInput(stepsContainer, "ex: Asse por 30 minutos")
     );
   document
-    .getElementById("select-image-btn")
-    .addEventListener("click", () => photoUploadInput.click());
-  document
     .getElementById("back-to-list-btn")
     .addEventListener("click", () => showView("app-view"));
   document
@@ -866,12 +975,19 @@ document.addEventListener("DOMContentLoaded", () => {
       const reader = new FileReader();
       reader.onload = (e) => {
         imagePreview.src = e.target.result;
+        imagePreview.classList.remove("hidden");
+        photoUploadPrompt.classList.add("hidden");
       };
       reader.readAsDataURL(file);
     }
   });
   searchInput.addEventListener("input", renderRecipeList);
-
+  favoritesFilter.addEventListener("click", () => {
+    const isChecked = favoritesFilter.getAttribute("aria-checked") === "true";
+    favoritesFilter.setAttribute("aria-checked", !isChecked);
+    renderRecipeList();
+  });
+  categoryFilter.addEventListener("change", renderRecipeList);
   const numericInputs = [
     document.getElementById("prep-time"),
     document.getElementById("cook-time"),
@@ -885,8 +1001,7 @@ document.addEventListener("DOMContentLoaded", () => {
       input.addEventListener("input", enforceNumericInput);
     }
   });
-
-  populateCategorySelect();
+  populateCategorySelects();
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
       navigator.serviceWorker
