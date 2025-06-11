@@ -40,6 +40,8 @@ let currentRecipeId = null;
 let viewingRecipeId = null;
 let recipesUnsubscribe = null;
 let allUserRecipes = [];
+let activeTimers = {};
+
 const authView = document.getElementById("auth-view");
 const appView = document.getElementById("app-view");
 const recipeFormView = document.getElementById("recipe-form-view");
@@ -72,6 +74,7 @@ const recipeCategorySelect = document.getElementById("recipe-category");
 const favoritesFilter = document.getElementById("favorites-filter");
 const categoryFilter = document.getElementById("category-filter");
 const recipeCount = document.getElementById("recipe-count");
+const timersContainer = document.getElementById("timers-container");
 
 const RECIPE_CATEGORIES = [
   "Aperitivos e Entradas",
@@ -601,6 +604,12 @@ function renderRecipeDetail(recipe) {
   const categoryHTML = recipe.category
     ? `<div class="flex items-center"><i data-lucide="tag" class="h-5 w-5 mr-2 text-amber-500"></i>Categoria: <strong>${recipe.category}</strong></div>`
     : "";
+  const ingredientsHTML = (recipe.ingredients || [])
+    .map((ing) => `<li>${parseForTimers(ing, recipe.name)}</li>`)
+    .join("");
+  const stepsHTML = (recipe.steps || [])
+    .map((step) => `<li>${parseForTimers(step, recipe.name)}</li>`)
+    .join("");
 
   detailContent.innerHTML = `<div class="bg-white rounded-lg shadow-xl overflow-hidden"><div class="relative"><img src="${
     recipe.photoUrl || "https://placehold.co/800x400/e2e8f0/cbd5e0?text=Receita"
@@ -612,19 +621,7 @@ function renderRecipeDetail(recipe) {
     recipe.isFavorite
       ? '<i data-lucide="heart" class="h-7 w-7 fill-current"></i>'
       : '<i data-lucide="heart" class="h-7 w-7"></i>'
-  }</button></div></div><div class="flex flex-wrap gap-x-6 gap-y-2 text-gray-600 border-b pb-4 mb-6">${prepTimeHTML}${cookTimeHTML}${servingsHTML}${categoryHTML}</div><div class="space-y-8"><section> <h2 class="text-2xl font-semibold mb-3 text-gray-800">Ingredientes</h2><ul class="list-disc list-inside space-y-2 text-gray-700">${(
-    recipe.ingredients || []
-  )
-    .map((ing) => `<li>${ing}</li>`)
-    .join(
-      ""
-    )}</ul></section><section><h2 class="text-2xl font-semibold mb-3 text-gray-800">Modo de Preparo</h2><ol class="list-decimal list-inside space-y-4 text-gray-700">${(
-    recipe.steps || []
-  )
-    .map((step) => `<li>${step}</li>`)
-    .join(
-      ""
-    )}</ol></section></div><div class="mt-8 pt-6 border-t flex justify-end space-x-3"><button id="edit-recipe-btn-detail" class="inline-flex items-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"><i data-lucide="edit" class="mr-2 h-5 w-5"></i>Editar</button><button id="delete-recipe-btn-detail" class="inline-flex items-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700"><i data-lucide="trash-2" class="mr-2 h-5 w-5"></i>Excluir</button></div></div></div>`;
+  }</button></div></div><div class="flex flex-wrap gap-x-6 gap-y-2 text-gray-600 border-b pb-4 mb-6">${prepTimeHTML}${cookTimeHTML}${servingsHTML}${categoryHTML}</div><div class="space-y-8"><section> <h2 class="text-2xl font-semibold mb-3 text-gray-800">Ingredientes</h2><ul class="list-disc list-inside space-y-2 text-gray-700">${ingredientsHTML}</ul></section><section><h2 class="text-2xl font-semibold mb-3 text-gray-800">Modo de Preparo</h2><ol class="list-decimal list-inside space-y-4 text-gray-700">${stepsHTML}</ol></section></div><div class="mt-8 pt-6 border-t flex justify-end space-x-3"><button id="edit-recipe-btn-detail" class="inline-flex items-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"><i data-lucide="edit" class="mr-2 h-5 w-5"></i>Editar</button><button id="delete-recipe-btn-detail" class="inline-flex items-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700"><i data-lucide="trash-2" class="mr-2 h-5 w-5"></i>Excluir</button></div></div></div>`;
   showView("recipe-detail-view");
   document
     .getElementById("back-from-detail")
@@ -657,44 +654,45 @@ function renderRecipeDetail(recipe) {
   document
     .getElementById("print-btn-detail")
     .addEventListener("click", () => window.print());
+  document.querySelectorAll(".timer-link").forEach((link) =>
+    link.addEventListener("click", (e) => {
+      const minutes = parseInt(e.target.dataset.minutes, 10);
+      if (!isNaN(minutes)) {
+        createTimer(minutes, recipe.name);
+      }
+    })
+  );
 }
 function createEditableListItem(container, placeholder, value = "") {
   const wrapper = document.createElement("div");
   wrapper.className = "flex items-center space-x-2 dynamic-item group";
-
   const handle = document.createElement("span");
   handle.className =
     "drag-handle cursor-grab text-gray-400 hover:text-gray-600";
   handle.innerHTML =
     '<i data-lucide="grip-vertical" class="h-5 w-5 pointer-events-none"></i>';
-
   const span = document.createElement("span");
   span.textContent = value;
   span.className = "flex-grow p-2";
-
   const input = document.createElement("input");
   input.type = "text";
   input.value = value;
   input.placeholder = placeholder;
   input.className =
     "hidden flex-grow block w-full border-gray-300 rounded-md shadow-sm sm:text-sm";
-
   const editBtn = document.createElement("button");
   editBtn.type = "button";
   editBtn.innerHTML =
     '<i data-lucide="pencil" class="h-5 w-5 text-gray-400 hover:text-amber-500 pointer-events-none"></i>';
-
   const saveBtn = document.createElement("button");
   saveBtn.type = "button";
   saveBtn.innerHTML =
     '<i data-lucide="check" class="h-5 w-5 text-gray-400 hover:text-green-500 pointer-events-none"></i>';
   saveBtn.className = "hidden";
-
   const removeBtn = document.createElement("button");
   removeBtn.type = "button";
   removeBtn.innerHTML =
     '<i data-lucide="x-circle" class="h-5 w-5 text-gray-400 hover:text-red-500 pointer-events-none"></i>';
-
   const switchToEditMode = () => {
     span.classList.add("hidden");
     editBtn.classList.add("hidden");
@@ -716,7 +714,6 @@ function createEditableListItem(container, placeholder, value = "") {
     input.classList.add("hidden");
     saveBtn.classList.add("hidden");
   };
-
   editBtn.addEventListener("click", switchToEditMode);
   saveBtn.addEventListener("click", switchToDisplayMode);
   input.addEventListener("keydown", (e) => {
@@ -729,14 +726,12 @@ function createEditableListItem(container, placeholder, value = "") {
     }
   });
   removeBtn.addEventListener("click", () => wrapper.remove());
-
   wrapper.appendChild(handle);
   wrapper.appendChild(span);
   wrapper.appendChild(input);
   wrapper.appendChild(editBtn);
   wrapper.appendChild(saveBtn);
   wrapper.appendChild(removeBtn);
-
   container.appendChild(wrapper);
   if (typeof lucide !== "undefined") lucide.createIcons();
   if (!value) {
@@ -810,6 +805,87 @@ function showRecipeForm(recipeToEdit = null) {
   });
   showView("recipe-form-view");
 }
+
+function parseForTimers(text, recipeName) {
+  const timeRegex = /(\d+)\s*(minuto|minutos|min|mins|hora|horas|hr|hrs)/gi;
+  return text.replace(timeRegex, (match, value, unit) => {
+    let minutes = parseInt(value, 10);
+    if (unit.match(/hora|horas|hr|hrs/i)) {
+      minutes *= 60;
+    }
+    return `<span class="timer-link" data-minutes="${minutes}" data-recipe-name="${recipeName}">${match}</span>`;
+  });
+}
+function createTimer(minutes, recipeName) {
+  const id = `timer-${Date.now()}`;
+  let seconds = minutes * 60;
+  const timerEl = document.createElement("div");
+  timerEl.id = id;
+  timerEl.className =
+    "bg-white rounded-lg shadow-lg p-3 w-64 flex items-center justify-between";
+  const updateDisplay = () => {
+    const mins = Math.floor(seconds / 60)
+      .toString()
+      .padStart(2, "0");
+    const secs = (seconds % 60).toString().padStart(2, "0");
+    timerEl.querySelector(".time-display").textContent = `${mins}:${secs}`;
+  };
+  const interval = setInterval(() => {
+    seconds--;
+    if (seconds < 0) {
+      clearInterval(interval);
+      timerEl.classList.add("bg-green-100");
+      timerEl.querySelector(".pause-btn").classList.add("hidden");
+      showModal(
+        "Temporizador Terminado",
+        `O temporizador para "${recipeName}" acabou!`,
+        "success"
+      );
+    } else {
+      updateDisplay();
+    }
+  }, 1000);
+  activeTimers[id] = { interval, isPaused: false };
+  timerEl.innerHTML = `<div class="flex-grow"><div class="text-sm font-semibold truncate">${recipeName}</div><div class="text-3xl font-mono time-display"></div></div><div class="flex flex-col space-y-1 ml-2"><button class="pause-btn p-1 text-gray-500 hover:text-amber-600"><i data-lucide="pause-circle" class="h-5 w-5 pointer-events-none"></i></button><button class="close-btn p-1 text-gray-500 hover:text-red-600"><i data-lucide="x-circle" class="h-5 w-5 pointer-events-none"></i></button></div>`;
+  timersContainer.appendChild(timerEl);
+  updateDisplay();
+  if (typeof lucide !== "undefined") lucide.createIcons();
+  timerEl.querySelector(".pause-btn").addEventListener("click", () => {
+    if (activeTimers[id].isPaused) {
+      activeTimers[id].interval = setInterval(() => {
+        seconds--;
+        if (seconds < 0) {
+          clearInterval(activeTimers[id].interval);
+          timerEl.classList.add("bg-green-100");
+          timerEl.querySelector(".pause-btn").classList.add("hidden");
+          showModal(
+            "Temporizador Terminado",
+            `O temporizador para "${recipeName}" acabou!`,
+            "success"
+          );
+        } else {
+          updateDisplay();
+        }
+      }, 1000);
+      timerEl
+        .querySelector(".pause-btn i")
+        .setAttribute("data-lucide", "pause-circle");
+    } else {
+      clearInterval(activeTimers[id].interval);
+      timerEl
+        .querySelector(".pause-btn i")
+        .setAttribute("data-lucide", "play-circle");
+    }
+    activeTimers[id].isPaused = !activeTimers[id].isPaused;
+    if (typeof lucide !== "undefined") lucide.createIcons();
+  });
+  timerEl.querySelector(".close-btn").addEventListener("click", () => {
+    clearInterval(activeTimers[id].interval);
+    delete activeTimers[id];
+    timerEl.remove();
+  });
+}
+
 window.toggleFavorite = toggleFavoriteStatus;
 document.addEventListener("DOMContentLoaded", () => {
   loginForm.addEventListener("submit", async (e) => {

@@ -23,7 +23,7 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 
-    <!-- NEW: SortableJS Library for Drag-and-Drop -->
+    <!-- SortableJS Library for Drag-and-Drop -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 
     <!-- Custom Stylesheet -->
@@ -320,7 +320,7 @@
         </div>
     </div>
 
-    <!-- ===== Global Modals ===== -->
+    <!-- ===== Global Modals & Timers ===== -->
     <div id="modal-container"
         class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
         <div id="modal-content" class="modal-fade-in bg-white rounded-lg shadow-xl p-6 text-center max-w-sm"></div>
@@ -328,6 +328,11 @@
     <div id="loader" class="hidden fixed inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50">
         <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-amber-500"></div>
     </div>
+    <!-- NEW: Timers Container -->
+    <div id="timers-container" class="fixed bottom-4 right-4 z-50 space-y-3">
+        <!-- Timer widgets will be injected here by JS -->
+    </div>
+
 
     <!-- Main Application Script -->
     <script src="js/config.js"></script>
