@@ -8,6 +8,7 @@ build/
 # Files with sensitive information
 .env
 *.env
+js/config.js  # <-- ADICIONE ESTA LINHA
 
 # OS-specific files
 .DS_Store

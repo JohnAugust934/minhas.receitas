@@ -30,19 +30,11 @@ import {
 } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-storage.js";
 
 // =================================================================
-// CONFIGURAÇÃO
+// INICIALIZAÇÃO E CONFIGURAÇÃO
 // =================================================================
 
-// Cole sua configuração do Firebase aqui
-const firebaseConfig = {
-  apiKey: "AIzaSyBVhmXtfKGR6jQSRY4jHQu39m1wT4hSiCM",
-  authDomain: "minhas-receitas-app-456de.firebaseapp.com",
-  projectId: "minhas-receitas-app-456de",
-  storageBucket: "minhas-receitas-app-456de.firebasestorage.app",
-  messagingSenderId: "795944851200",
-  appId: "1:795944851200:web:b68c53e0250342896a45e5",
-  measurementId: "G-8FHCCGYNW8",
-};
+// A variável `firebaseConfig` é agora carregada a partir do ficheiro js/config.js
+// Certifique-se de que o ficheiro js/config.js existe e está correto.
 
 // --- Inicialização do Firebase ---
 const app = initializeApp(firebaseConfig);
@@ -50,7 +42,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-// --- Seletores de DOM ---
+// ... (O resto do ficheiro permanece exatamente o mesmo)
 const appId =
   typeof __app_id !== "undefined" ? __app_id : "minhas-receitas-app";
 let currentUser = null;
@@ -78,7 +70,6 @@ const loader = document.getElementById("loader");
 const modalContainer = document.getElementById("modal-container");
 const modalContent = document.getElementById("modal-content");
 
-// --- Novos Seletores de DOM ---
 const userMenuButton = document.getElementById("user-menu-button");
 const userMenu = document.getElementById("user-menu");
 const changePasswordBtn = document.getElementById("change-password-btn");
@@ -87,7 +78,6 @@ const searchInput = document.getElementById("search-input");
 const forgotPasswordLink = document.getElementById("forgot-password-link");
 const recipeCategorySelect = document.getElementById("recipe-category");
 
-// --- Constantes da Aplicação ---
 const RECIPE_CATEGORIES = [
   "Aperitivos e Entradas",
   "Pratos Principais",
@@ -286,10 +276,6 @@ function populateCategorySelect() {
   });
 }
 
-// =================================================================
-// LÓGICA DA APLICAÇÃO
-// =================================================================
-
 // --- Lógica de Autenticação ---
 onAuthStateChanged(auth, (user) => {
   if (user) {
@@ -457,7 +443,6 @@ function validateRecipeForm() {
   const steps = Array.from(stepsContainer.querySelectorAll("input"))
     .map((input) => input.value.trim())
     .filter((val) => val !== "");
-
   if (!name) {
     showModal("Erro de Validação", "O nome da receita é obrigatório.", "error");
     return false;
