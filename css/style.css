@@ -115,3 +115,17 @@ input[type="number"] {
   animation: card-fade-in 0.5s ease-out forwards;
   opacity: 0; /* Start as invisible */
 }
+
+/* NEW: Styles for Drag-and-Drop functionality */
+.drag-handle {
+  cursor: grab;
+}
+
+.sortable-ghost {
+  opacity: 0.4;
+  background: #fef3c7; /* amber-100 */
+}
+
+.sortable-chosen {
+  cursor: grabbing;
+}

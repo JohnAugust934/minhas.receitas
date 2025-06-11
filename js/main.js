@@ -657,7 +657,13 @@ function renderRecipeDetail(recipe) {
 }
 function createEditableListItem(container, placeholder, value = "") {
   const wrapper = document.createElement("div");
-  wrapper.className = "flex items-center space-x-2 dynamic-item";
+  wrapper.className = "flex items-center space-x-2 dynamic-item group";
+
+  const handle = document.createElement("span");
+  handle.className =
+    "drag-handle cursor-grab text-gray-400 hover:text-gray-600";
+  handle.innerHTML =
+    '<i data-lucide="grip-vertical" class="h-5 w-5 pointer-events-none"></i>';
 
   const span = document.createElement("span");
   span.textContent = value;
@@ -694,7 +700,6 @@ function createEditableListItem(container, placeholder, value = "") {
     input.focus();
     input.select();
   };
-
   const switchToDisplayMode = () => {
     const newValue = input.value.trim();
     if (newValue === "" && span.textContent === "") {
@@ -720,9 +725,9 @@ function createEditableListItem(container, placeholder, value = "") {
       switchToDisplayMode();
     }
   });
-
   removeBtn.addEventListener("click", () => wrapper.remove());
 
+  wrapper.appendChild(handle);
   wrapper.appendChild(span);
   wrapper.appendChild(input);
   wrapper.appendChild(editBtn);
@@ -731,7 +736,6 @@ function createEditableListItem(container, placeholder, value = "") {
 
   container.appendChild(wrapper);
   if (typeof lucide !== "undefined") lucide.createIcons();
-
   if (!value) {
     switchToEditMode();
   }
@@ -789,6 +793,18 @@ function showRecipeForm(recipeToEdit = null) {
   } else {
     document.getElementById("form-title").textContent = "Nova Receita";
   }
+  new Sortable(ingredientsContainer, {
+    animation: 150,
+    handle: ".drag-handle",
+    ghostClass: "sortable-ghost",
+    chosenClass: "sortable-chosen",
+  });
+  new Sortable(stepsContainer, {
+    animation: 150,
+    handle: ".drag-handle",
+    ghostClass: "sortable-ghost",
+    chosenClass: "sortable-chosen",
+  });
   showView("recipe-form-view");
 }
 window.toggleFavorite = toggleFavoriteStatus;
